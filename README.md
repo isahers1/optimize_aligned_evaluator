@@ -32,5 +32,6 @@ This is a very very incomplete package, more done as a thought exercise than any
 
 This is not an exhaustive list but here are some future improvements that I think would be helpful:
 
+- Make less brittle (there are lot's of cases not accounted for)
 - Make the code more performant (no async code right now, no parallelization)
 - Optimize across multiple models

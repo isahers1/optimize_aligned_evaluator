@@ -79,6 +79,7 @@ class Optimizer:
 
         #TODO: get baseline score somehow
         current_prompt_ref = evaluator["evaluators"][0]["structured"]["hub_ref"]
+        variable_mapping = evaluator["evaluators"][0]["structured"]["variable_mapping"]
         prompt_name = current_prompt_ref.split(":")[0]
         current_prompt_and_model = self.client.pull_prompt(current_prompt_ref, include_model=True)
         current_prompt_info = self.client.get_prompt(prompt_name)
@@ -96,7 +97,11 @@ class Optimizer:
         print("Running alignment experiments...")
         while iteration <= max_iterations and alignment_score < stop_threshold:
             def target(inputs):
-                variables = get_variables_from_input_variables(current_prompt.input_variables, inputs)
+                input_variables = [
+                    variable_mapping[k] if k in variable_mapping else k
+                    for k in current_prompt.input_variables
+                ]
+                variables = get_variables_from_input_variables(input_variables, inputs)
                 
                 chain = current_prompt | model
                 result = chain.invoke(variables)
