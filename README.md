@@ -6,7 +6,7 @@ This is a simple python package that optimizes the prompts for your LangSmith al
 
 Follow the docs (here)[https://docs.smith.langchain.com/evaluation/tutorials/aligning_evaluator] to create an alignable evaluator.
 
-::: note
+:::note
 You don't need to edit your prompt at all from the default, the optimizer will take care of making the prompt as optimized as possible.
 :::
 
