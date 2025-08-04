@@ -15,7 +15,7 @@ def format_meta_prompt(sample_example, current_prompt, incorrect_examples):
         system_prompt = file.read()
 
     prompt = [("system", system_prompt), ("user",
-    f"Here is the sample example to see what variables are available to you:{sample_example}\n\nHere is the current prompt:\n{current_prompt}\n\n\Here are the examples that were incorrectly aligned:\n{incorrect_examples}")]
+    f"Here is the sample example to see what variables are available to you:{sample_example}\n\nHere is the current prompt:\n{current_prompt}\n\n\Here are the examples that were misaligned:\n{incorrect_examples}")]
     
     return prompt
 
@@ -40,7 +40,7 @@ def format_experiment_results(current_prompt, experiment_results, client, input_
             result += f"\n</example>"
         else:
             reference_example = client.read_example(example_id=experiment_result.reference_example_id)
-            result += f"\n<reference_outputs>\n{reference_example.outputs}</reference_outputs>\n</example>\n\n"
+            result += f"\n<output>{experiment_result.outputs}\n</output>\n<reference_output>\n{reference_example.outputs}</reference_output>\n</example>\n\n"
 
     return result
 
@@ -117,6 +117,8 @@ class Optimizer:
             time.sleep(3)
 
             alignment_experiment_results = [r for r in self.client.list_runs(project_name=experiment_name, is_root=True)]
+            alignment_score = sum([r.feedback_stats['offline_alignment']['avg'] for r in alignment_experiment_results if r.feedback_stats])/len([r for r in alignment_experiment_results if r.feedback_stats])
+            print(f"Iteration {iteration} Alignment Score: {alignment_score}")
             message_generation_iteration = 0
             while message_generation_iteration < 2:
                 prompt = format_meta_prompt(
@@ -137,8 +139,6 @@ class Optimizer:
             response =requests.post(f"{self.langsmith_url}/commits/{current_prompt_owner}/{prompt_name}", headers={"x-api-key": self.langsmith_api_key},
                 json={"manifest": {"lc": 1, "type": "constructor", "id": ["langsmith", "playground", "PromptPlayground"], "kwargs": {"first": serialized_prompt_and_model["kwargs"]["first"], "last": dumpd(model)}}, "parent_commit": current_prompt_commit_hash, "skip_webhooks": []})
             current_prompt_commit_hash = response.json()['commit']['commit_hash']
-            alignment_score = sum([r.feedback_stats['offline_alignment']['avg'] for r in alignment_experiment_results if r.feedback_stats])/len([r for r in alignment_experiment_results if r.feedback_stats])
-            print(f"Iteration {iteration} Alignment Score: {alignment_score}")
             iteration += 1
 
 
